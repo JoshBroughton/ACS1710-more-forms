@@ -1,13 +1,13 @@
 from flask import Flask, request, render_template
 from PIL import Image, ImageFilter
 from pprint import PrettyPrinter
-#from dotenv import load_dotenv
+from dotenv import load_dotenv
 import json
 import os
 import random
 import requests
 
-#load_dotenv()
+load_dotenv()
 
 
 app = Flask(__name__)
@@ -186,9 +186,9 @@ Set up dotenv, create a .env file and define a variable
 API_KEY with a value that is the api key for your account. """
 
 API_KEY = os.getenv('API_KEY')
-print(API_KEY)
 
-TENOR_URL = 'https://api.tenor.com/v1/search'
+
+TENOR_URL = 'https://tenor.googleapis.com/v2/search'
 pp = PrettyPrinter(indent=4)
 
 @app.route('/gif_search', methods=['GET', 'POST'])
@@ -197,17 +197,16 @@ def gif_search():
     if request.method == 'POST':
         # TODO: Get the search query & number of GIFs requested by the user, store each as a 
         # variable
+        search_query = request.form.get('search_query')
+        limit = request.form.get('quantity')
 
-        response = requests.get(
-            TENOR_URL,
-            {
-                # TODO: Add in key-value pairs for:
-                # - 'q': the search query
-                # - 'key': the API key (defined above)
-                # - 'limit': the number of GIFs requested
+        response = requests.get(TENOR_URL, {
+                'q': search_query,
+                'key': API_KEY,
+                'limit': limit,
             })
 
-        gifs = json.loads(response.content).get('results')
+        gifs = json.loads(response.content)['results']
 
         context = {
             'gifs': gifs
@@ -218,7 +217,7 @@ def gif_search():
         # list of data. The media property contains a 
         # list of media objects. Get the gif and use it's 
         # url in your template to display the gif. 
-        # pp.pprint(gifs)
+        #pp.pprint(gifs)
 
         return render_template('gif_search.html', **context)
     else:
