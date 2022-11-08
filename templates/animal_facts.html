@@ -16,10 +16,11 @@ Animal Facts
             <!-- TODO: Use a for loop to show one option element for each 
                 animal. -->
             <select name="animal">
-                <option value="koala">koala</option>
+            {% for animal in list_of_animals %}
+                <option value={{animal}}>{{animal}}</option>
+            {% endfor %}
             </select>
         </label>
-
         <input type="submit" value="Get Fact!">
     </fieldset>
 </form>
@@ -32,7 +33,7 @@ Animal Facts
         Here is your animal fact:
     </p>
     <p>
-        <em>Your animal fact goes here.</em>
+        {{chosen_animal_fact}}
     </p>
 </section>
 
