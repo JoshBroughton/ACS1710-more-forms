@@ -141,3 +141,6 @@ cython_debug/
 solutions.py
 solutions/
 templates/solutions/
+
+#filtered images
+static/
