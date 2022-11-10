@@ -74,23 +74,28 @@ def compliments_results():
 animal_to_fact = {
     'koala': 'Koala fingerprints are so close to humans\' that they could taint crime scenes.',
     'parrot': 'Parrots will selflessly help each other out.',
-    'mantis shrimp': 'The mantis shrimp has the world\'s fastest punch.',
+    'mantis': 'The mantis shrimp has the world\'s fastest punch.',
     'lion': 'Female lions do 90 percent of the hunting.',
-    'narwhal': 'Narwhal tusks are really an "inside out" tooth.'
+    'narwhal': 'Narwhal tusks are really an "inside out" tooth.',
+    'chameleon': 'A chameleon\'s tongue is as long as its body.',
+    'humingbird': 'Humminbirds wings flap at up to 200 beats per second.',
 }
 
 @app.route('/animal_facts')
 def animal_facts():
     """Show a form to choose an animal and receive facts."""
-    chosen_animal = request.args.get('animal')
-    if chosen_animal:
-        chosen_animal_fact = animal_to_fact[chosen_animal]
+    chosen_animal_facts = []
+    chosen_animals = request.args.getlist('animal')
+    if chosen_animals:
+        for animal in chosen_animals:
+            chosen_animal_facts.append(animal_to_fact[animal])
     else:
-        chosen_animal_fact = 'Please choose an animal from the drop down!'
-
+        chosen_animal_facts.append('Please choose some animals from the drop down!')
+    
     context = {
         'list_of_animals': animal_to_fact.keys(),
-        'chosen_animal_fact': chosen_animal_fact,
+        'chosen_animal_facts': chosen_animal_facts,
+        'chosen_animals': chosen_animals,
     }
     return render_template('animal_facts.html', **context)
 
@@ -111,15 +116,9 @@ filter_types_dict = {
 
 def save_image(image, filter_type):
     """Save the image, then return the full file path of the saved image."""
-    # Append the filter type at the beginning (in case the user wants to 
-    # apply multiple filters to 1 image, there won't be a name conflict)
     new_file_name = f"{filter_type}-{image.filename}"
     image.filename = new_file_name
-
-    # Construct full file path
     file_path = os.path.join(app.root_path, 'static/images', new_file_name)
-    
-    # Save the image
     image.save(file_path)
 
     return file_path
@@ -138,28 +137,15 @@ def image_filter():
     filter_types = filter_types_dict.keys()
 
     if request.method == 'POST':
-        
-        # TODO: Get the user's chosen filter type (whichever one they chose in the form) and save
-        # as a variable
-        # HINT: remember that we're working with a POST route here so which requests function would you use?
         filter_type = request.form.get('filter_type')
-        
-        # Get the image file submitted by the user
         image = request.files.get('users_image')
-
-        # TODO: call `save_image()` on the image & the user's chosen filter type, save the returned
-        # value as the new file path
         image_file_path = save_image(image, filter_type)
-        # TODO: Call `apply_filter()` on the file path & filter type
         apply_filter(image_file_path, filter_type)
 
         image_url = f'./static/images/{image.filename}'
 
         context = {
-            # TODO: Add context variables here for:
-            # - The full list of filter types
-            'filter_types': filter_types_dict.keys(),
-            # - The image URL
+            'filter_types': filter_types,
             'image_url': image_url,
         }
 
@@ -175,18 +161,7 @@ def image_filter():
 ################################################################################
 # GIF SEARCH ROUTE
 ################################################################################
-
-"""You'll be using the Tenor API for this next section. 
-Be sure to take a look at their API. 
-
-https://tenor.com/gifapi/documentation
-
-Register and make an API key for yourself. 
-Set up dotenv, create a .env file and define a variable 
-API_KEY with a value that is the api key for your account. """
-
 API_KEY = os.getenv('API_KEY')
-
 
 TENOR_URL = 'https://tenor.googleapis.com/v2/search'
 pp = PrettyPrinter(indent=4)
@@ -195,8 +170,6 @@ pp = PrettyPrinter(indent=4)
 def gif_search():
     """Show a form to search for GIFs and show resulting GIFs from Tenor API."""
     if request.method == 'POST':
-        # TODO: Get the search query & number of GIFs requested by the user, store each as a 
-        # variable
         search_query = request.form.get('search_query')
         limit = request.form.get('quantity')
 
@@ -211,13 +184,6 @@ def gif_search():
         context = {
             'gifs': gifs
         }
-
-         # Uncomment me to see the result JSON!
-        # Look closely at the response! It's a list
-        # list of data. The media property contains a 
-        # list of media objects. Get the gif and use it's 
-        # url in your template to display the gif. 
-        #pp.pprint(gifs)
 
         return render_template('gif_search.html', **context)
     else:
