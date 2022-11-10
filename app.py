@@ -1,11 +1,17 @@
-from flask import Flask, request, render_template
-from PIL import Image, ImageFilter
-from pprint import PrettyPrinter
-from dotenv import load_dotenv
-import json
+"""
+app.py is a Flask server with routes to forms which compliment the user,
+dish some sweet animal facts, apply filter to user uploaded images,
+and search for gifs using the tenor GIF API
+"""
 import os
+import json
 import random
+
+from PIL import Image, ImageFilter
+from dotenv import load_dotenv
 import requests
+from flask import Flask, request, render_template
+
 
 load_dotenv()
 
@@ -56,7 +62,7 @@ def compliments():
 def compliments_results():
     """Show the user some compliments."""
     num_compliments = int(request.args.get('num_compliments'))
-    compliment_list = random.sample(list_of_compliments, k = num_compliments)
+    compliment_list = random.sample(list_of_compliments, k=num_compliments)
     context = {
         'users_name': request.args.get('users_name'),
         'wants_compliments': request.args.get('wants_compliments'),
@@ -91,7 +97,7 @@ def animal_facts():
             chosen_animal_facts.append(animal_to_fact[animal])
     else:
         chosen_animal_facts.append('Please choose some animals from the drop down!')
-    
+
     context = {
         'list_of_animals': animal_to_fact.keys(),
         'chosen_animal_facts': chosen_animal_facts,
@@ -162,9 +168,9 @@ def image_filter():
 # GIF SEARCH ROUTE
 ################################################################################
 API_KEY = os.getenv('API_KEY')
-
+#altered url to use tenor API v2 with a google developer API
 TENOR_URL = 'https://tenor.googleapis.com/v2/search'
-pp = PrettyPrinter(indent=4)
+
 
 @app.route('/gif_search', methods=['GET', 'POST'])
 def gif_search():
@@ -172,17 +178,17 @@ def gif_search():
     if request.method == 'POST':
         search_query = request.form.get('search_query')
         limit = request.form.get('quantity')
-
+        #added timout to get rid of pylint squigglies
         response = requests.get(TENOR_URL, {
-                'q': search_query,
-                'key': API_KEY,
-                'limit': limit,
-            })
-
+            'q': search_query,
+            'key': API_KEY,
+            'limit': limit,
+            }, timeout=5.0)
+        #get the results object of the response
         gifs = json.loads(response.content)['results']
 
         context = {
-            'gifs': gifs
+            'gifs': gifs,
         }
 
         return render_template('gif_search.html', **context)
